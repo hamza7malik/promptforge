@@ -49,8 +49,10 @@ async def process_document_task(
             document.status = "processing"
             await db.commit()
             
+            file_ext = document_name.split('.')[-1] if '.' in document_name else 'pdf'
+            
             # Download file from S3
-            with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_type}") as tmp_file:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_ext}") as tmp_file:
                 tmp_path = tmp_file.name
             
             await s3_service.download_file(s3_key, tmp_path)

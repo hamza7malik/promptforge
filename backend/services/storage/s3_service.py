@@ -54,34 +54,31 @@ class S3Service:
         file_type: str,
         expiration: int = None
     ) -> Dict[str, Any]:
-        """Generate presigned URL for direct file upload
+        """Generate presigned URL for direct file upload (PUT method)
         
         Returns:
-            Dictionary with upload URL and required fields
+            Dictionary with upload URL and S3 key
         """
         try:
             expiration = expiration or settings.AWS_S3_PRESIGNED_URL_EXPIRY
             
-            # Generate presigned POST
-            response = self.s3_client.generate_presigned_post(
-                Bucket=self.bucket_name,
-                Key=s3_key,
-                Fields={
-                    'Content-Type': file_type
+            # Generate presigned URL for PUT
+            url = self.s3_client.generate_presigned_url(
+                'put_object',
+                Params={
+                    'Bucket': self.bucket_name,
+                    'Key': s3_key,
+                    'ContentType': file_type
                 },
-                Conditions=[
-                    {'Content-Type': file_type},
-                    ['content-length-range', 1, settings.MAX_FILE_SIZE]
-                ],
                 ExpiresIn=expiration
             )
             
             logger.info(f"Generated presigned upload URL for: {s3_key}")
             
             return {
-                'upload_url': response['url'],
-                'fields': response['fields'],
-                's3_key': s3_key
+                'upload_url': url,
+                's3_key': s3_key,
+                'fields': {}  # Empty for compatibility with response model
             }
             
         except ClientError as e:

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAgentStore } from "@/stores/agentStore";
 import { useConversationStore } from "@/stores/conversationStore";
 import { apiClient } from "@/api";
-import { Button, Card, CardContent, Input, Textarea } from "@/components";
+import { Button, Card, CardContent, Input } from "@/components";
 import {
   Bot,
   Plus,
@@ -11,6 +11,8 @@ import {
   MessageSquare,
   User,
   Loader2,
+  FileText,
+  X,
 } from "lucide-react";
 import type { Message } from "@/types";
 
@@ -33,6 +35,8 @@ export default function ChatPage() {
   const [showNewConversationModal, setShowNewConversationModal] =
     useState(false);
   const [newConversationTitle, setNewConversationTitle] = useState("");
+  const [showContextModal, setShowContextModal] = useState(false);
+  const [selectedChunks, setSelectedChunks] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -278,11 +282,33 @@ export default function ChatPage() {
                       <p className="text-sm whitespace-pre-wrap">
                         {message.content}
                       </p>
-                      {message.tokens_used && (
-                        <p className="text-xs mt-2 opacity-70">
-                          {message.tokens_used} tokens · {message.latency_ms}ms
-                        </p>
-                      )}
+
+                      <div className="flex items-center gap-2 mt-2">
+                        {/* View Context Button */}
+                        {message.role === "assistant" &&
+                          message.retrieved_chunks &&
+                          message.retrieved_chunks.length > 0 && (
+                            <button
+                              onClick={() => {
+                                setSelectedChunks(
+                                  message.retrieved_chunks || []
+                                );
+                                setShowContextModal(true);
+                              }}
+                              className="text-xs px-2 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md flex items-center gap-1 transition-colors"
+                            >
+                              <FileText className="w-3 h-3" />
+                              View Context ({message.retrieved_chunks.length})
+                            </button>
+                          )}
+
+                        {message.tokens_used && (
+                          <p className="text-xs opacity-70">
+                            {message.tokens_used} tokens · {message.latency_ms}
+                            ms
+                          </p>
+                        )}
+                      </div>
                     </div>
                     {message.role === "user" && (
                       <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
@@ -349,6 +375,62 @@ export default function ChatPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {showContextModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-3xl max-h-[80vh] bg-white rounded-lg shadow-xl flex flex-col">
+            <div className="p-6 border-b flex items-center justify-between flex-shrink-0">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Retrieved Context ({selectedChunks.length} chunks)
+              </h3>
+              <button
+                onClick={() => setShowContextModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-3">
+              {selectedChunks.map((chunk, idx) => (
+                <div
+                  key={idx}
+                  className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-xs font-semibold text-gray-500">
+                      Chunk {idx + 1}
+                    </span>
+                    <div className="flex gap-2 text-xs">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                        Score: {chunk.score.toFixed(3)}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">
+                    {chunk.content}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    📄 {chunk.document_name}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Fixed Footer */}
+            <div className="p-6 border-t flex-shrink-0">
+              <Button
+                onClick={() => setShowContextModal(false)}
+                variant="outline"
+                className="w-full"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

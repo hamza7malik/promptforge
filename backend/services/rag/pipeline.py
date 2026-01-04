@@ -26,11 +26,14 @@ class DocumentProcessor:
     async def load_document(self, file_path: str, file_type: str) -> str:
         """Load document content based on file type"""
         try:
-            if file_type == "pdf":
+            file_ext = file_type.split('/')[-1] if '/' in file_type else file_type
+            file_ext = file_ext.lower()
+            
+            if file_ext == "pdf":
                 loader = PyPDFLoader(file_path)
-            elif file_type == "docx":
+            elif file_ext in ["docx", "vnd.openxmlformats-officedocument.wordprocessingml.document"]:
                 loader = Docx2txtLoader(file_path)
-            elif file_type in ["txt", "md"]:
+            elif file_ext in ["txt", "md", "plain"]:
                 loader = TextLoader(file_path)
             else:
                 raise ValueError(f"Unsupported file type: {file_type}")
@@ -132,24 +135,33 @@ class VectorStore:
         vectors: List[tuple],
         namespace: str
     ) -> Dict[str, Any]:
-        """Upsert vectors to Pinecone
+        """Upsert vectors to Pinecone in batches
         
         Args:
             vectors: List of (id, embedding, metadata) tuples
             namespace: Agent ID as namespace
         """
         try:
-            # Pinecone upsert is synchronous, run in executor
+    
+            batch_size = 100
+            total_upserted = 0
+            
             loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(
-                None,
-                lambda: self.index.upsert(
-                    vectors=vectors,
-                    namespace=namespace
+            
+            for i in range(0, len(vectors), batch_size):
+                batch = vectors[i:i + batch_size]
+                await loop.run_in_executor(
+                    None,
+                    lambda b=batch: self.index.upsert(
+                        vectors=b,
+                        namespace=namespace
+                    )
                 )
-            )
-            logger.info(f"Upserted {len(vectors)} vectors to namespace {namespace}")
-            return result
+                total_upserted += len(batch)
+                logger.info(f"Upserted batch {i//batch_size + 1}: {total_upserted}/{len(vectors)} vectors")
+            
+            logger.info(f"Successfully upserted {total_upserted} vectors to namespace {namespace}")
+            return {"upserted_count": total_upserted}
         except Exception as e:
             logger.error(f"Error upserting vectors: {e}")
             raise

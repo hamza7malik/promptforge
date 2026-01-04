@@ -152,6 +152,7 @@ export interface Improvement {
 }
 
 export interface PresignedUploadRequest {
+  agent_id: string;
   filename: string;
   file_type: string;
   file_size: number;
