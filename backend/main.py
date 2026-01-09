@@ -10,7 +10,7 @@ from core.logging import setup_logging, logger
 from core.database import engine, Base
 
 # Import routers
-from api.routes import agents, documents, chat, conversations, evaluations, prompts, admin, auth
+from api.routes import agents, documents, chat, conversations, evaluations, prompts, admin, auth, prompt_generation
 
 
 @asynccontextmanager
@@ -113,6 +113,7 @@ app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(conversations.router, prefix="/api/conversations", tags=["Conversations"])
 app.include_router(evaluations.router, prefix="/api/evaluations", tags=["Evaluations"])
 app.include_router(prompts.router, prefix="/api/prompts", tags=["Prompts"])
+app.include_router(prompt_generation.router, prefix="/api/prompt-generation", tags=["Prompt Generation"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 
 

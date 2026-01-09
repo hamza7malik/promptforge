@@ -178,6 +178,68 @@ class PromptSuggestion(Base):
     )
 
 
+class GeneratedPrompt(Base):
+    __tablename__ = "generated_prompts"
+    
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    agent_id = Column(String, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String, nullable=False)
+    feature_name = Column(String, nullable=False)
+    user_story = Column(Text)
+    tech_stack = Column(JSON, default=list)  # ["FastAPI", "React", etc.]
+    requirements = Column(JSON, default=list)  # List of functional requirements
+    constraints = Column(JSON, default=list)  # Non-functional constraints
+    architecture_style = Column(String)  # microservices, monolithic, serverless
+    existing_code_context = Column(Text)  # Optional code snippet
+    generated_prompt = Column(Text, nullable=False)
+    contexts_used = Column(JSON, default=list)  # Retrieved chunks metadata
+    confidence_score = Column(Float)  # 0-1 confidence in generated prompt
+    tokens_count = Column(Integer)
+    generation_time_ms = Column(Integer)
+    is_saved = Column(Boolean, default=False)  # User explicitly saved it
+    is_public = Column(Boolean, default=False)  # Shared with team/community
+    tags = Column(JSON, default=list)
+    metadata_ = Column("metadata", JSON, default=dict)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    ratings = relationship("PromptRating", back_populates="prompt", cascade="all, delete-orphan")
+    
+    # Indexes
+    __table_args__ = (
+        Index("idx_gen_prompt_user_id", "user_id"),
+        Index("idx_gen_prompt_agent_id", "agent_id"),
+        Index("idx_gen_prompt_created_at", "created_at"),
+        Index("idx_gen_prompt_is_saved", "is_saved"),
+    )
+
+
+class PromptRating(Base):
+    __tablename__ = "prompt_ratings"
+    
+    id = Column(String, primary_key=True, default=generate_uuid)
+    prompt_id = Column(String, ForeignKey("generated_prompts.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    rating = Column(Integer, nullable=False)  # 1 (👎) or 5 (👍) - simplified thumbs up/down
+    feedback = Column(Text)  # Optional feedback text
+    was_successful = Column(Boolean)  # Did the generated code work?
+    code_quality_score = Column(Integer)  # 1-5 rating of generated code quality
+    notes = Column(Text)  # Additional notes
+    metadata_ = Column("metadata", JSON, default=dict)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    prompt = relationship("GeneratedPrompt", back_populates="ratings")
+    
+    # Indexes
+    __table_args__ = (
+        Index("idx_rating_prompt_id", "prompt_id"),
+        Index("idx_rating_user_id", "user_id"),
+    )
+
+
 class AuditLog(Base):
     __tablename__ = "audit_logs"
     

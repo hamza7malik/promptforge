@@ -200,6 +200,45 @@ class APIClient {
     const response = await this.client.get("/api/admin/health");
     return response.data;
   }
+
+  // Prompt Generation
+  async generatePrompt(data: any): Promise<any> {
+    const response = await this.client.post(
+      "/api/prompt-generation/generate",
+      data
+    );
+    return response.data;
+  }
+
+  async savePrompt(data: any): Promise<any> {
+    const response = await this.client.post(
+      "/api/prompt-generation/save",
+      data
+    );
+    return response.data;
+  }
+
+  async ratePrompt(data: any): Promise<any> {
+    const response = await this.client.post(
+      "/api/prompt-generation/rate",
+      data
+    );
+    return response.data;
+  }
+
+  async listPrompts(params?: any): Promise<any[]> {
+    const response = await this.client.get("/api/prompt-generation/", {
+      params,
+    });
+    return response.data;
+  }
+
+  async getPrompt(promptId: string): Promise<any> {
+    const response = await this.client.get(
+      `/api/prompt-generation/${promptId}`
+    );
+    return response.data;
+  }
 }
 
 export const apiClient = new APIClient();

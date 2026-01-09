@@ -189,3 +189,76 @@ export interface SystemHealth {
   llm: string;
   timestamp: string;
 }
+
+export interface GeneratedPrompt {
+  id: string;
+  user_id: string;
+  agent_id: string;
+  title: string;
+  feature_name: string;
+  user_story: string;
+  tech_stack: string[];
+  requirements: string[];
+  constraints: string[];
+  architecture_style: string;
+  existing_code_context?: string;
+  generated_prompt: string;
+  contexts_used: RetrievedContext[];
+  confidence_score: number;
+  tokens_count: number;
+  generation_time_ms: number;
+  is_saved: boolean;
+  is_public: boolean;
+  tags?: string[];
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface RetrievedContext {
+  content: string;
+  score: number;
+  document_name: string;
+}
+
+export interface PromptGenerationRequest {
+  agent_id: string;
+  feature_name: string;
+  user_story: string;
+  tech_stack: string[];
+  requirements: string[];
+  constraints: string[];
+  existing_code_context?: string;
+  architecture_style: string;
+  include_tests: boolean;
+  include_documentation: boolean;
+  include_error_handling: boolean;
+}
+
+export interface SavedPrompt {
+  id: string;
+  title: string;
+  feature_name: string;
+  user_story: string;
+  tech_stack: string[];
+  requirements: string[];
+  constraints: string[];
+  generated_prompt: string;
+  confidence_score: number;
+  is_public: boolean;
+  tags?: string[];
+  rating_count: number;
+  avg_rating?: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface PromptListItem {
+  id: string;
+  title: string;
+  feature_name: string;
+  tech_stack: string[];
+  confidence_score: number;
+  is_saved: boolean;
+  tags?: string[];
+  created_at: string;
+}

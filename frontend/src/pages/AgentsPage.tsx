@@ -20,6 +20,7 @@ import {
   MessageSquare,
   FileText,
   X,
+  Wand2,
 } from "lucide-react";
 import type { Agent, AgentCreate } from "@/types";
 
@@ -213,6 +214,13 @@ export default function AgentsPage() {
                     >
                       <MessageSquare className="w-4 h-4 mr-1" />
                       Chat
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => navigate(`/generate/${agent.id}`)}
+                    >
+                      <Wand2 className="w-4 h-4" />
                     </Button>
                     <Button
                       size="sm"

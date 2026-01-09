@@ -15,6 +15,7 @@ import {
   PromptsPage,
   AdminPage,
   LoginPage,
+  PromptGeneratorPage,
 } from "./pages";
 
 function App() {
@@ -60,6 +61,12 @@ function App() {
           path="/documents/:agentId"
           element={
             isAuthenticated ? <DocumentsPage /> : <Navigate to="/login" />
+          }
+        />
+        <Route
+          path="/generate/:agentId"
+          element={
+            isAuthenticated ? <PromptGeneratorPage /> : <Navigate to="/login" />
           }
         />
         <Route

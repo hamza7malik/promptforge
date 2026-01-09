@@ -5,3 +5,4 @@ export { default as DocumentsPage } from "./DocumentsPage";
 export { default as PromptsPage } from "./PromptsPage";
 export { default as AdminPage } from "./AdminPage";
 export { default as LoginPage } from "./LoginPage";
+export { default as PromptGeneratorPage } from "./PromptGeneratorPage";

@@ -13,8 +13,10 @@ import {
   Loader2,
   FileText,
   X,
+  Wand2,
 } from "lucide-react";
 import type { Message } from "@/types";
+import PromptGenerationModal from "@/components/PromptGenerationModal";
 
 export default function ChatPage() {
   const { agents, fetchAgents } = useAgentStore();
@@ -37,6 +39,7 @@ export default function ChatPage() {
   const [newConversationTitle, setNewConversationTitle] = useState("");
   const [showContextModal, setShowContextModal] = useState(false);
   const [selectedChunks, setSelectedChunks] = useState<any[]>([]);
+  const [showPromptModal, setShowPromptModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -128,6 +131,41 @@ export default function ChatPage() {
       } catch (err) {
         console.error("Failed to delete conversation:", err);
       }
+    }
+  };
+
+  const handleGeneratePrompt = async (formData: any) => {
+    if (!currentConversation || !selectedAgent) return;
+
+    try {
+      setIsSending(true);
+      const result = await apiClient.generatePrompt({
+        agent_id: selectedAgent.id,
+        ...formData,
+      });
+
+      // Add the generated prompt as an assistant message
+      const assistantMessage: Message = {
+        id: result.id,
+        conversation_id: currentConversation.id,
+        role: "assistant",
+        content: `# Generated Expert Prompt\n\n${
+          result.generated_prompt
+        }\n\n---\n\n**Confidence:** ${(result.confidence_score * 100).toFixed(
+          0
+        )}% | **Tokens:** ${result.tokens_count} | **Time:** ${
+          result.generation_time_ms
+        }ms`,
+        retrieved_chunks: result.contexts_used,
+        created_at: new Date().toISOString(),
+      };
+
+      addMessage(assistantMessage);
+      setShowPromptModal(false);
+    } catch (err) {
+      console.error("Failed to generate prompt:", err);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -323,6 +361,15 @@ export default function ChatPage() {
 
             {/* Message Input */}
             <div className="bg-white border-t p-4">
+              <div className="flex gap-2 mb-2">
+                <button
+                  onClick={() => setShowPromptModal(true)}
+                  className="text-xs px-3 py-1.5 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-md flex items-center gap-1.5 transition-colors"
+                >
+                  <Wand2 className="w-3.5 h-3.5" />
+                  Generate Prompt
+                </button>
+              </div>
               <form onSubmit={handleSendMessage} className="flex gap-3">
                 <Input
                   value={messageText}
@@ -433,6 +480,14 @@ export default function ChatPage() {
           </div>
         </div>
       )}
+
+      {/* Prompt Generation Modal */}
+      <PromptGenerationModal
+        isOpen={showPromptModal}
+        onClose={() => setShowPromptModal(false)}
+        onGenerate={handleGeneratePrompt}
+        isGenerating={isSending}
+      />
     </div>
   );
 }

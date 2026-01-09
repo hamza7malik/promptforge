@@ -265,3 +265,106 @@ class SystemHealth(BaseModel):
     storage: str
     llm: str
     timestamp: datetime
+
+
+# Prompt Generation Schemas
+class ArchitectureStyle(str, Enum):
+    MICROSERVICES = "microservices"
+    MONOLITHIC = "monolithic"
+    SERVERLESS = "serverless"
+    HYBRID = "hybrid"
+
+
+class PromptGenerationRequest(BaseModel):
+    agent_id: str
+    feature_name: str = Field(..., min_length=3, max_length=200)
+    user_story: Optional[str] = Field(None, max_length=2000)
+    tech_stack: List[str] = Field(default_factory=list)
+    requirements: List[str] = Field(default_factory=list)
+    constraints: List[str] = Field(default_factory=list)
+    existing_code_context: Optional[str] = Field(None, max_length=10000)
+    architecture_style: Optional[ArchitectureStyle] = None
+    include_tests: bool = True
+    include_documentation: bool = True
+    include_error_handling: bool = True
+
+
+class RetrievedContext(BaseModel):
+    content: str
+    score: float
+    document_name: str
+    chunk_id: Optional[str] = None
+
+
+class PromptGenerationResponse(BaseModel):
+    id: str
+    generated_prompt: str
+    confidence_score: float
+    tokens_count: int
+    generation_time_ms: int
+    contexts_used: List[RetrievedContext]
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SavePromptRequest(BaseModel):
+    prompt_id: str
+    title: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    is_public: bool = False
+
+
+class SavedPrompt(BaseModel):
+    id: str
+    title: str
+    feature_name: str
+    user_story: Optional[str] = None
+    tech_stack: List[str]
+    requirements: List[str]
+    constraints: List[str]
+    generated_prompt: str
+    confidence_score: Optional[float] = None
+    is_public: bool
+    tags: List[str]
+    rating_count: int = 0
+    avg_rating: Optional[float] = None
+    reuse_count: int = 0
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PromptRatingRequest(BaseModel):
+    prompt_id: str
+    rating: int = Field(..., ge=1, le=5)  # 1 = thumbs down, 5 = thumbs up
+    feedback: Optional[str] = Field(None, max_length=1000)
+    was_successful: Optional[bool] = None
+    code_quality_score: Optional[int] = Field(None, ge=1, le=5)
+    notes: Optional[str] = Field(None, max_length=2000)
+
+
+class PromptRatingResponse(BaseModel):
+    id: str
+    prompt_id: str
+    rating: int
+    feedback: Optional[str] = None
+    was_successful: Optional[bool] = None
+    code_quality_score: Optional[int] = None
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PromptListItem(BaseModel):
+    id: str
+    title: str
+    feature_name: str
+    tech_stack: List[str]
+    confidence_score: Optional[float] = None
+    is_saved: bool
+    tags: List[str]
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
